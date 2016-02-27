@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <form>
+        测试文字: <input type="text" id="messageInput" />
+        <button id="submit">发送</button>
+    </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io('http://localhost:3000');
+        var submitBtn = document.getElementById('submit');
+        var messageInput = document.getElementById('messageInput');
+
+        submitBtn.onclick = function() {
+            console.log(messageInput.value);
+            socket.emit('message', messageInput.value);
+            return false;
+        }
+    </script>
+</body>
+</html>
