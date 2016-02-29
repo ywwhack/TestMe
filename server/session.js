@@ -10,6 +10,5 @@ try {
 }
 
 const session = fs.readFileSync(sessionFilePath, 'utf8');
-console.log(typeof JSON.parse(session));
 exports.session = JSON.parse(session);
 exports.sessionFilePath = sessionFilePath;
