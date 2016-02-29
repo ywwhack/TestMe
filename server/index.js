@@ -1,32 +1,35 @@
 'use strict';
-const app = require('express')();
-const http = require('http').Server(app);
+const koa = require('koa');
+const app = new koa();
+const http = require('http').createServer(app.callback());
 const io = require('socket.io')(http);
-const cookieParser = require('cookie-parser');
-const multer = require('multer');
-const upload = multer({dest: 'uploads'});
-const apnConfigure = require('./apnConfigure');
+const bfs = require('babel-fs');
 
+// middle ware
+const router = require('koa-router')();
+const multer = require('koa-multer');
+const upload = multer({dest: 'uploads'});
+
+// apn configure
+const apnConfigure = require('./apnConfigure');
 const apn = apnConfigure.apn;
 const device = apnConfigure.device;
 const apnConnection = apnConfigure.connenction;
 
-app.use(cookieParser());
-
-app.get('/', function(req, res){
-  res.sendfile('index.html');
+router.get('/', async function(ctx, next) {
+  const filePath = `${__dirname}/index.html`;
+  ctx.body = await bfs.readFile(filePath);
+  ctx.type = "html";
 });
 
-app.get('/profile', (req, res) => {
-  // res.cookie('name', 'hehe');
-  res.sendfile('profile.html');
-  console.log(req.cookies);
+router.post('/profile', upload.any(), async function(ctx, next) {
+  console.log(ctx.req.files);
+  ctx.body = "";
 });
 
-app.post('/profile', upload.any(), (req, res) => {
-  console.log(req.files);
-  res.end();
-});
+app
+  .use(router.routes())
+  .use(router.allowedMethods());
 
 io.on('connection', function(socket) {
   socket.on('message', (data) => {
