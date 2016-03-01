@@ -91,5 +91,6 @@ http.listen(3000, function(){
 });
 
 process.on('SIGINT', () => {
+  http.close();
   fs.writeFileSync(sessionFilePath, JSON.stringify(session));
 });
