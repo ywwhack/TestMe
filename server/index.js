@@ -24,9 +24,8 @@ router.get('/', async function(ctx, next) {
 });
 
 router.post('/profile', upload.any(), async function(ctx, next) {
-  let cookie = qs.parse(ctx.get('Cookie'));
   const uploadFiles = ctx.req.files;
-  let token = cookie['token'];
+  let token = ctx.cookies.get('token');
   if(!token) {
     token = session.nextID;
     session.nextID++;
@@ -43,8 +42,7 @@ router.post('/profile', upload.any(), async function(ctx, next) {
   tokenObj['passphrase'] = ctx.req.body['passphrase'];
   console.log(session);
 
-  cookie.token = token;
-  ctx.set('Set-Cookie', qs.stringify(cookie));
+  ctx.cookies.set('token', token);
   ctx.body = "";
 });
 
@@ -53,7 +51,7 @@ router.post('/message', async function(ctx, next) {
   ctx.req.setEncoding('utf8');
   ctx.req.on('data', (data) => {
     console.log(data);
-    let token = qs.parse(ctx.get('Cookie'))['token'];
+    let token = ctx.cookies.get('token');
     if(token) {
       const tokenObj = session[token];
       const deviceToken = tokenObj['deviceToken']; //长度为64的设备Token，去除空格
