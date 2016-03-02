@@ -7,7 +7,7 @@ import qs from 'querystring';
 import apn from 'apn';
 import path from 'path';
 
-import {rootPath} from './configure';
+import {rootPath, templatePath} from './configure';
 import {session, sessionFilePath} from './session';
 
 // middleware
@@ -18,13 +18,14 @@ const upload = multer({dest: `${rootPath}/uploads`});
 
 const app = new koa();
 
-router.get('/', async function(ctx, next) {
-  const filePath = `${rootPath}/index.html`;
+router.get('/', async (ctx, next) => {
+  const token = ctx.cookies.get('token');
+  const filePath = token ? `${templatePath}/message.html` : `${templatePath}/upload.html`;
   ctx.body = await bfs.readFile(filePath);
   ctx.type = "html";
 });
 
-router.post('/profile', upload.any(), async function(ctx, next) {
+router.post('/profile', upload.any(), async (ctx, next) => {
   const uploadFiles = ctx.req.files;
   let token = ctx.cookies.get('token');
   if(!token) {
@@ -44,10 +45,10 @@ router.post('/profile', upload.any(), async function(ctx, next) {
   console.log(session);
 
   ctx.cookies.set('token', token);
-  ctx.body = "";
+  ctx.redirect('/');
 });
 
-router.post('/message', async function(ctx, next) {
+router.post('/message', async (ctx, next) => {
   // TODO: replace this with middle ware
   ctx.req.setEncoding('utf8');
   ctx.req.on('data', (data) => {
@@ -84,7 +85,7 @@ app
   .use(router.routes())
   .use(router.allowedMethods());
 
-const server = app.listen(3000, function(){
+const server = app.listen(3000, () => {
   console.log('listening on *:3000');
 });
 
