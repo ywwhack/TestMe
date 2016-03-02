@@ -1,24 +1,25 @@
 'use strict';
-const koa = require('koa');
+
+import koa from 'koa';
+import bfs from 'babel-fs';
+import fs from 'fs';
+import qs from 'querystring';
+import apn from 'apn';
+import path from 'path';
+
+import {rootPath} from './configure';
+import {session, sessionFilePath} from './session';
+
+// middleware
+import koaRouter from 'koa-router';
+import multer from 'koa-multer';
+const router = koaRouter();
+const upload = multer({dest: `${rootPath}/uploads`});
+
 const app = new koa();
-const http = require('http').createServer(app.callback());
-const bfs = require('babel-fs');
-const fs = require('fs');
-const qs = require('querystring');
-const apn=require('apn');
-
-// session
-const s = require('./session');
-let session = s.session;
-const sessionFilePath = s.sessionFilePath;
-
-// middle ware
-const router = require('koa-router')();
-const multer = require('koa-multer');
-const upload = multer({dest: 'uploads'});
 
 router.get('/', async function(ctx, next) {
-  const filePath = `${__dirname}/index.html`;
+  const filePath = `${rootPath}/index.html`;
   ctx.body = await bfs.readFile(filePath);
   ctx.type = "html";
 });
@@ -50,7 +51,6 @@ router.post('/message', async function(ctx, next) {
   // TODO: replace this with middle ware
   ctx.req.setEncoding('utf8');
   ctx.req.on('data', (data) => {
-    console.log(data);
     let token = ctx.cookies.get('token');
     if(token) {
       const tokenObj = session[token];
@@ -84,11 +84,11 @@ app
   .use(router.routes())
   .use(router.allowedMethods());
 
-http.listen(3000, function(){
+const server = app.listen(3000, function(){
   console.log('listening on *:3000');
 });
 
 process.on('SIGINT', () => {
-  http.close();
+  server.close();
   fs.writeFileSync(sessionFilePath, JSON.stringify(session));
 });
