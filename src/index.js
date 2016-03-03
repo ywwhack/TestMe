@@ -42,10 +42,9 @@ router.post('/profile', upload.any(), async (ctx, next) => {
   });
   tokenObj['deviceToken'] = ctx.req.body['device_token'];
   tokenObj['passphrase'] = ctx.req.body['passphrase'];
-  console.log(session);
-
-  ctx.cookies.set('token', token);
+  ctx.cookies.set('token', token, {maxAge: 7*24*60*60*1000}); // expired after 7 days
   ctx.redirect('/');
+
 });
 
 router.post('/message', async (ctx, next) => {
