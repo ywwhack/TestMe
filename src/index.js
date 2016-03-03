@@ -52,7 +52,9 @@ router.post('/message', async (ctx, next) => {
   // TODO: replace this with middle ware
   ctx.req.setEncoding('utf8');
   ctx.req.on('data', (data) => {
-    let token = ctx.cookies.get('token');
+    const token = ctx.cookies.get('token');
+    data = JSON.parse(data);
+    console.log(data);
     if(token) {
       const tokenObj = session[token];
       const deviceToken = tokenObj['deviceToken']; //长度为64的设备Token，去除空格
@@ -67,11 +69,16 @@ router.post('/message', async (ctx, next) => {
       const device = new apn.Device(deviceToken);
       const note = new apn.Notification();
       note.expiry = Math.floor(Date.now() / 1000) + 60;
-      note.badge = 0;
-      note.alert = JSON.parse(data)['message'];
+      note.alert = data['alert'];
       note.sound = 'default';
       note.payload = {'messageFrom': 'Caroline'};
       note.device = device;
+
+      const badge = parseInt(data['badge']);
+      if (badge != -1) {
+        note.badge = badge;
+      }
+
       apnConnection.pushNotification(note, device);
 
       ctx.body = 'success';
