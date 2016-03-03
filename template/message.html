@@ -8,6 +8,17 @@
 </head>
 <body>
   <div class="container" style="margin-top: 100px;">
+    <table class="table">
+      <tr>
+        <th>Key Pem</th>
+        <th>Cert Pem</th>
+        <th>DeviceToken</th>
+        <th>操作</th>
+      </tr>
+      <tr id="deviceInfoTr">
+        <td><a href="/profile" class="btn-xs btn-primary">更改</a></td>
+      </tr>
+    </table>
     <form id="messageForm">
       <div class="form-group">
         <label for="alertInput">Alert:</label>
@@ -27,6 +38,8 @@
     var alertInput = document.getElementById('alertInput');
     var badgeInput = document.getElementById('badgeInput');
     var messageForm = document.getElementById('messageForm');
+    var table = document.getElementById('table');
+    var deviceInfoTr = document.getElementById('deviceInfoTr');
 
     messageForm.onsubmit = function (e) {
       var data = {
@@ -40,7 +53,26 @@
       };
       xhr.send(JSON.stringify(data));
       return false;
-    }
+    };
+
+    var deviceInfoXhr = new XMLHttpRequest();
+    deviceInfoXhr.open('GET', 'http://localhost:3000/deviceInfo');
+    deviceInfoXhr.onload = function() {
+      var deviceInfo = JSON.parse(deviceInfoXhr.responseText);
+      var tdsHtml = '';
+      for(key in deviceInfo) {
+        tdsHtml += '<td>'+ deviceInfo[key] +'</td>';
+      }
+      deviceInfoTr.innerHTML = tdsHtml;
+      var oTd = document.createElement('td');
+      var oA = document.createElement('a');
+      oA.href = '/profile';
+      oA.innerText = "更改";
+      oA.className = 'btn-sm btn-primary';
+      oTd.appendChild(oA);
+      deviceInfoTr.appendChild(oTd);
+    };
+    deviceInfoXhr.send(null);
   </script>
 </body>
 </html>

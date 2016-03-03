@@ -20,8 +20,31 @@ const app = new koa();
 
 router.get('/', async (ctx, next) => {
   const token = ctx.cookies.get('token');
-  const filePath = token ? `${templatePath}/message.html` : `${templatePath}/upload.html`;
+  const filePath = token && session[token] ? `${templatePath}/message.html` : `${templatePath}/upload.html`;
   ctx.body = await bfs.readFile(filePath);
+  ctx.type = "html";
+});
+
+router.get('/deviceInfo', async (ctx, next) => {
+  const token = ctx.cookies.get('token');
+  if(token) {
+    const tokenObj = session[token];
+    ctx.body = {
+      keyFileName: tokenObj['keyFileName'],
+      certFileName: tokenObj['certFileName'],
+      deviceToken: tokenObj['deviceToken']
+    };
+  }else {
+    ctx.body = {
+      keyFileName: '',
+      certFileName: '',
+      deviceToken: ''
+    }
+  }
+});
+
+router.get('/profile', async (ctx, next) => {
+  ctx.body = await bfs.readFile(`${templatePath}/upload.html`);
   ctx.type = "html";
 });
 
@@ -36,8 +59,10 @@ router.post('/profile', upload.any(), async (ctx, next) => {
   uploadFiles.forEach(file => {
     if(file.fieldname == 'key_pem') {
       tokenObj['keyFilePath'] = file.path;
+      tokenObj['keyFileName'] = file.originalname;
     }else if(file.fieldname == 'cert_pem') {
       tokenObj['certFilePath'] = file.path;
+      tokenObj['certFileName'] = file.originalname;
     }
   });
   tokenObj['deviceToken'] = ctx.req.body['device_token'];
