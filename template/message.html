@@ -47,7 +47,7 @@
         badge: badgeInput.value ? badgeInput.value : -1
       };
       var xhr = new XMLHttpRequest();
-      xhr.open('POST', 'http://localhost:3000/message');
+      xhr.open('POST', '/message');
       xhr.onload = function () {
         alert('发送成功');
       };
@@ -56,7 +56,7 @@
     };
 
     var deviceInfoXhr = new XMLHttpRequest();
-    deviceInfoXhr.open('GET', 'http://localhost:3000/deviceInfo');
+    deviceInfoXhr.open('GET', '/deviceInfo');
     deviceInfoXhr.onload = function() {
       var deviceInfo = JSON.parse(deviceInfoXhr.responseText);
       var tdsHtml = '';
