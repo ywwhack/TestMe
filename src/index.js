@@ -13,6 +13,7 @@ import {session, sessionFilePath} from './session';
 // middleware
 import koaRouter from 'koa-router';
 import multer from 'koa-multer';
+import {body} from './middleware/body';
 const router = koaRouter();
 const upload = multer({dest: `${rootPath}/uploads`});
 
@@ -73,46 +74,43 @@ router.post('/profile', upload.any(), async (ctx, next) => {
 });
 
 router.post('/message', async (ctx, next) => {
-  // TODO: replace this with middle ware
-  ctx.req.setEncoding('utf8');
-  ctx.req.on('data', (data) => {
-    const token = ctx.cookies.get('token');
-    data = JSON.parse(data);
-    console.log(data);
-    if(token) {
-      const tokenObj = session[token];
-      const deviceToken = tokenObj['deviceToken']; //长度为64的设备Token，去除空格
-      const options = {
-        "cert": tokenObj['certFilePath'], //cert.pem文件的路径
-        "key": tokenObj['keyFilePath'],   //key.pem文件的路径
-        "gateway": "gateway.sandbox.push.apple.com",
-        "passphrase": tokenObj['passphrase'],
-        "port": 2195
-      };
-      const apnConnection = new apn.Connection(options);
-      const device = new apn.Device(deviceToken);
-      const note = new apn.Notification();
-      note.expiry = Math.floor(Date.now() / 1000) + 60;
-      note.alert = data['alert'];
-      note.sound = 'default';
-      note.payload = {'messageFrom': 'Caroline'};
-      note.device = device;
+  const token = ctx.cookies.get('token');
+  const data = ctx.body;
+  console.log(data);
+  if(token) {
+    const tokenObj = session[token];
+    const deviceToken = tokenObj['deviceToken']; //长度为64的设备Token，去除空格
+    const options = {
+      "cert": tokenObj['certFilePath'], //cert.pem文件的路径
+      "key": tokenObj['keyFilePath'],   //key.pem文件的路径
+      "gateway": "gateway.sandbox.push.apple.com",
+      "passphrase": tokenObj['passphrase'],
+      "port": 2195
+    };
+    const apnConnection = new apn.Connection(options);
+    const device = new apn.Device(deviceToken);
+    const note = new apn.Notification();
+    note.expiry = Math.floor(Date.now() / 1000) + 60;
+    note.alert = data['alert'];
+    note.sound = 'default';
+    note.payload = {'messageFrom': 'Caroline'};
+    note.device = device;
 
-      const badge = parseInt(data['badge']);
-      if (badge != -1) {
-        note.badge = badge;
-      }
-
-      apnConnection.pushNotification(note, device);
-
-      ctx.body = 'success';
-    }else {
-      ctx.body = 'no token';
+    const badge = parseInt(data['badge']);
+    if (badge != -1) {
+      note.badge = badge;
     }
-  });
+
+    apnConnection.pushNotification(note, device);
+
+    ctx.body = 'success';
+  }else {
+    ctx.body = 'no token';
+  }
 });
 
 app
+  .use(body)
   .use(router.routes())
   .use(router.allowedMethods());
 
